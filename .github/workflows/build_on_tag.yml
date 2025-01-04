@@ -1,0 +1,102 @@
+name: Build and Release .NET Project
+
+on:
+  push:
+    tags:
+      - 'v*'  # Triggers on tags that start with 'v'
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        include:
+          - os: ubuntu-latest
+            publish_runtime: linux-x64
+          - os: windows-latest
+            publish_runtime: win-x64
+          - os: macos-latest
+            publish_runtime: osx-x64
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: '9.0.x'  # Specify the .NET version you are using
+
+    - name: Restore dependencies
+      run: dotnet restore
+
+    - name: Publish
+      run: dotnet publish -c Release -r ${{ matrix.publish_runtime }} --self-contained true -p:PublishSingleFile=true -o ./publish
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: ${{ matrix.os }}-artifact
+        path: ./publish/*
+
+  release:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Download artifacts
+      uses: actions/download-artifact@v3
+      with:
+        name: ubuntu-latest-artifact
+        path: ./artifacts/linux
+    - uses: actions/download-artifact@v3
+      with:
+        name: windows-latest-artifact
+        path: ./artifacts/windows
+    - uses: actions/download-artifact@v3
+      with:
+        name: macos-latest-artifact
+        path: ./artifacts/macos
+
+    - name: Create Release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref }}
+        release_name: Release ${{ github.ref_name }}
+        draft: true
+        prerelease: false
+
+    - name: Upload Release Assets
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./artifacts/linux/*
+        asset_name: linux-executables.zip
+        asset_content_type: application/zip
+
+    - name: Upload Release Assets
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./artifacts/windows/*
+        asset_name: windows-executables.zip
+        asset_content_type: application/zip
+
+    - name: Upload Release Assets
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./artifacts/macos/*
+        asset_name: macos-executables.zip
+        asset_content_type: application/zip
