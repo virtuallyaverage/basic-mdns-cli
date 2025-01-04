@@ -40,10 +40,10 @@ jobs:
       run: dotnet restore
 
     - name: Publish
-      run: dotnet publish -c Release -r ${{ matrix.publish_runtime }} --self-contained true -p:PublishSingleFile=true -o ./publish
+      run: dotnet publish Sidecar-v3/YourProject.csproj -c Release -r ${{ matrix.publish_runtime }} --self-contained true -p:PublishSingleFile=true -o ./publish
 
     - name: Upload artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: ${{ matrix.os }}-artifact
         path: ./publish/*
@@ -56,15 +56,15 @@ jobs:
       uses: actions/checkout@v3
 
     - name: Download artifacts
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
         name: ubuntu-latest-artifact
         path: ./artifacts/linux
-    - uses: actions/download-artifact@v3
+    - uses: actions/download-artifact@v4
       with:
         name: windows-latest-artifact
         path: ./artifacts/windows
-    - uses: actions/download-artifact@v3
+    - uses: actions/download-artifact@v4
       with:
         name: macos-latest-artifact
         path: ./artifacts/macos
