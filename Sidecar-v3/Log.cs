@@ -4,13 +4,12 @@ public class Log
 {
     public enum LogType
     {
-        DBUG,
-        EROR,
-        WARN,
-        _ADD, // device added
-        _RMV, // device removed
-        _CHG, // device details updated
-        
+        DBUG, // enabled with --debug flag
+        EROR, // caused the system to fail
+        WARN, // will be presented, but don't contain info
+        _ADD, // device added + new device info.
+        _RMV, // device removed + old device info.
+        _CHG, // device details updated + new device info (has the same MAC address)
     }
 
     public class Logger

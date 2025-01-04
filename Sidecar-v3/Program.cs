@@ -52,7 +52,7 @@ namespace SidecarV3
             {
                 if (args.Length < 2)
                 {
-                    Console.WriteLine("DBUG:Usage: MySidecar <ParentProcessId> <MdnsID> [--debug]", Log.LogType.DBUG);
+                    Console.WriteLine("DBUG:Usage: <ParentProcessId> <MdnsID> [--debug]", Log.LogType.DBUG);
                     Console.WriteLine("WARN:Exiting: Not enough arguments.");
                     return false;
                 }
@@ -100,13 +100,20 @@ namespace SidecarV3
                     var ttl = svc.Ttl;
 
                     var properties = svc.Properties.FirstOrDefault();
-                    if (properties == null) continue;
+                    if (properties == null)
+                    {
+                        _logger.LogCL($"Device {host.DisplayName} Is detected but has no properties.", Log.LogType.WARN);
+                        continue;
+                    }
 
                     var mac = properties.FirstOrDefault(r => r.Key == "MAC").Value;
                     var ip = properties.FirstOrDefault(r => r.Key == "IP").Value ?? host.IPAddress;
 
                     if (string.IsNullOrWhiteSpace(mac))
+                    {
+                        _logger.LogCL($"Device {host.DisplayName} has IP:{ip} and is missing a MAC address.", Log.LogType.DBUG);
                         continue;
+                    }
 
                     var newService = new Service(mac, ip, host.DisplayName, port, ttl);
                     newlyDiscovered[mac] = newService;
