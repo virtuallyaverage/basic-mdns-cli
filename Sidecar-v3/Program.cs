@@ -50,16 +50,17 @@ namespace SidecarV3
             
             bool ParseCli()
             {
-                if (args.Length < 1)
+                if (args.Length < 2)
                 {
-                    _logger.LogCL("DBG:Usage: MySidecar <ParentProcessId> <MdnsID> [--debug]", Log.LogType.DBUG);
+                    Console.WriteLine("DBUG:Usage: MySidecar <ParentProcessId> <MdnsID> [--debug]", Log.LogType.DBUG);
+                    Console.WriteLine("WARN:Exiting: Not enough arguments.");
                     return false;
                 }
 
                 // Simple check for debug mode
                 _debugMode = args.Any(a => a.Equals("--debug", StringComparison.OrdinalIgnoreCase));
                 _logger = new Log.Logger(_debugMode);
-                _logger.LogCL($"Logging with debug mode {_debugMode}", Log.LogType.DBUG);
+                _logger.LogCL($"Logging with debug mode.", Log.LogType.DBUG);
 
                 // Extract filters (exclude the debug flag)
                 _mdnsId = args[1];
