@@ -9,7 +9,7 @@ namespace SidecarV3
     /// </summary>
     class Program
     {
-        static Log.Logger _logger;
+        static Log.Logger _logger = new Log.Logger();
         private static int _parentProcessId;
         static bool _debugMode;
         private static string? _mdnsId;
