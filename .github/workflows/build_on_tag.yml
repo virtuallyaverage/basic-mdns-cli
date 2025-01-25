@@ -26,14 +26,30 @@ jobs:
       with:
         dotnet-version: '9.0.x'
 
-    - name: Restore dependencies
-      run: dotnet restore
-
-    - name: Publish
-      run: dotnet publish -c Release -r ${{ matrix.publish_runtime }} --self-contained true -p:PublishSingleFile=true -o ./publish
-
-    - name: Cache published artifacts  
-      uses: actions/cache@v3
+    - name: Restore cached published artifacts
+      id: cache-restore
+      uses: actions/cache/restore@v4
       with:
         path: ./publish
         key: ${{ runner.os }}-publish-${{ github.sha }}
+
+    - name: Restore dependencies
+      if: steps.cache-restore.outputs.cache-hit != 'true'  
+      run: dotnet restore
+
+    - name: Build
+      if: steps.cache-restore.outputs.cache-hit != 'true'
+      run: dotnet publish -c Release -r ${{ matrix.publish_runtime }} --self-contained true -p:PublishSingleFile=true -o ./publish
+
+    - name: Cache published artifacts
+      id: cache-save  
+      uses: actions/cache/save@v4
+      with:
+        path: ./publish
+        key: ${{ steps.cache-restore.outputs.cache-primary-key }}
+        
+    - name: Upload artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: ${{ runner.os }}-artifact
+        path: ./publish/*
