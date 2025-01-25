@@ -8,6 +8,11 @@
         <Nullable>enable</Nullable>
     </PropertyGroup>
 
+    <PropertyGroup>
+    	<DebugType>Full</DebugType>
+    	<DebugSymbols>true</DebugSymbols>
+    </PropertyGroup>
+
     <ItemGroup>
       <PackageReference Include="Zeroconf" Version="3.7.16" />
     </ItemGroup>

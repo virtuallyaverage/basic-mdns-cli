@@ -22,31 +22,18 @@ namespace SidecarV3
         /// The application entry point.
         /// </summary>
         /// <param name="args">Command-line arguments.</param>
-        static void Main(string[] args)
+        static async Task Main(string[] args)
         {
             if (!ParseCli()) return;
 
-            while (true)
+            using var cts = new CancellationTokenSource();
+            Console.CancelKeyPress += (sender, eventArgs) =>
             {
-                var outputs = ProbeFor();
-                outputs.Wait();
-                
-                // If parentProcessId is zero, do not auto-close
-                if (_parentProcessId == 0) continue;
-                
-                // autoclose if parent process is done
-                try
-                {
-                    var parentProcess = Process.GetProcessById(_parentProcessId);
-                    if (!parentProcess.HasExited) break;
-                    _logger.LogCL("Parent process has exited. Terminating sidecar.", Log.LogType.WARN);
-                }
-                catch (ArgumentException)
-                {
-                    _logger.LogCL("Parent PID Invalid. Terminating sidecar.", Log.LogType.EROR);
-                    break;
-                }
-            }
+                cts.Cancel();
+                eventArgs.Cancel = true;
+            };
+
+            await RunSidecarAsync(cts.Token);
             
             bool ParseCli()
             {
@@ -78,6 +65,29 @@ namespace SidecarV3
                 }
                 
                 return true;
+            }
+        }
+
+        static async Task RunSidecarAsync(CancellationToken token)
+        {
+            while (!token.IsCancellationRequested)
+            {
+                await ProbeFor();
+
+                if (_parentProcessId == 0)  continue;
+
+                try
+                {
+                    var parentProcess = Process.GetProcessById(_parentProcessId);
+                    if (!parentProcess.HasExited) break;
+
+                    _logger.LogCL("Parent process has exited. Terminating sidecar.", Log.LogType.WARN);
+                }
+                catch (ArgumentException)
+                {
+                    _logger.LogCL("Parent PID Invalid. Terminating sidecar.", Log.LogType.EROR);
+                    break;
+                }
             }
         }
 
