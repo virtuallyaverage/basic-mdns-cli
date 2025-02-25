@@ -1,4 +1,4 @@
-# How to Use:
+# How to Use: DEPRECATED, no longer needed
 Download the executable from the releases and run it in powershell or a command prompt. 
 Setting the ParentProcessId to 0 disables the parent tracking functionality.
 ```
